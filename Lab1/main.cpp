@@ -12,6 +12,7 @@
 #include <vector>
 #include <time.h>
 #include <math.h>
+#include <list> 
 
 # define KEY_ESC 27
 # define KEY_PLUS 43
@@ -132,7 +133,7 @@ public:
 		return sqrt (pow ((a.first - b.first), 2) + pow ((a.second - b.second), 2));
 	}
 	
-	vector<pair<int,int> > findPath (N inicial, N objetivo) {
+	vector<pair<int,int> > findPathA (N inicial, N objetivo) {
 		/// encontrar el nodo inicial
 		Node *Actual = nullptr, *NMin=nullptr;
 		Edge *EMin = nullptr;
@@ -171,6 +172,39 @@ public:
 		
 	}
 	
+	vector<pair<int, int>> findPathBlind(N inicial, N objetivo) {
+		Node* Actual = nullptr;
+		
+		vector<Node* > Ncamino;
+		if ((Actual = findNode(inicial)) and findNode(objetivo)) {
+			list<Node *> cola;
+			cola.push_back(Actual);
+			Ncamino.push_back(Actual);
+			while (!cola.empty() && cola.front()->data != objetivo) {
+				Actual = cola.front();
+				for (auto edge : Actual->edges) {
+					Node* B = edge->nodes[edge->nodes[0] == Actual];
+					if (!B->marked) {
+						cola.push_back(B);
+						Ncamino.push_back(B);
+						B->marked = true;
+					}
+				}
+				cola.pop_front();
+			}
+			if(!cola.empty())
+				   Ncamino.push_back(cola.front());
+		}
+		vector<pair<int, int>> camino;
+		for (auto node : Ncamino) {
+			cout << "(" << node->data.first << "," << node->data.second << ") ->";
+			camino.push_back(make_pair(node->data.first, node->data.second));
+			node->marked = false;
+		}
+		return camino;
+		
+	}
+	
 	void PrintGraph () {
 		cout << "Number of nodes: " << nodes.size () << endl << endl;
 		//typename vector<Node *>::iterator it;
@@ -184,7 +218,8 @@ public:
 };
 
 Graph<pair<int, int>, int> *graph = new Graph<pair<int, int>, int>;
-vector<pair<int,int>> camino;
+vector<pair<int,int>> caminoA;
+vector<pair<int,int>> caminoBlind;
 
 bool lastOne (int i) {
 	while ( i > 100 ) 
@@ -201,13 +236,15 @@ GLvoid window_key(unsigned char key, int x, int y) {
 		break;
 	case ENTER:
 	{
-		camino.clear();
+		caminoA.clear();
+		caminoBlind.clear();
 		pair<int, int> inicial;
 		pair<int, int> objetivo;
 		cout << "Ingresa las coordenadas iniciales: "; cin >> inicial.first>> inicial.second;
 		cout << "Ingresa las coordenadas objetivos: "; cin >> objetivo.first >> objetivo.second;
 		
-		camino = graph->findPath (inicial, objetivo);
+		caminoA = graph->findPathA (inicial, objetivo);
+		caminoBlind = graph->findPathBlind (inicial, objetivo);
 		glutPostRedisplay();
 		break;
 	}
@@ -249,8 +286,17 @@ void display_cb() {
 		}
 	}
 	
+	glLineWidth(5);
+	glColor3f(0,0,1);
 	glBegin(GL_LINE_STRIP);
-		for( auto node : camino) {
+		for( auto node : caminoA) {
+			glVertex2i(node.first, node.second);
+		}
+	glEnd();
+	glLineWidth(2);
+	glColor3f(0,1,0);
+	glBegin(GL_LINE_STRIP);
+		for( auto node : caminoBlind) {
 			glVertex2i(node.first, node.second);
 		}
 	glEnd();
