@@ -13,11 +13,13 @@
 #include <time.h>
 #include <math.h>
 #include <list> 
+#include <bits/stdc++.h> 
 
 # define KEY_ESC 27
 # define KEY_PLUS 43
 # define KEY_MINUS 45
 # define ENTER 13
+# define KEY_B 98
 
 using namespace std;
 
@@ -141,10 +143,10 @@ public:
 		double minV,total;
 		vector<Edge *> Ecamino;
 		vector<Node * > Ncamino;
-		if ( (Actual = findNode (inicial)) and findNode(objetivo) ) {
+		if ((Actual = findNode(inicial)) and findNode(objetivo) ) {
 			Ncamino.push_back (Actual);
 			while ( Actual->data != objetivo ) {
-				minV = 100000;
+				minV = INT_MAX;
 				/*for ( int i = 0; i < Actual->edges.size (); ++i ) {
 				Actual->edges[i]
 				}*/
@@ -163,8 +165,9 @@ public:
 			}
 		}
 		vector<pair<int,int>> camino;
+		cout<<endl<<"Camino A*"<<endl;
 		for ( auto node : Ncamino ) {
-			cout << "(" << node->data.first << "," << node->data.second << ") ->";
+			cout << "(" << node->data.first << "," << node->data.second << "); ";
 			camino.push_back(make_pair(node->data.first, node->data.second));
 		}
 		
@@ -176,7 +179,12 @@ public:
 		Node* Actual = nullptr;
 		
 		vector<Node* > Ncamino;
-		if ((Actual = findNode(inicial)) and findNode(objetivo)) {
+		if( !findNode(objetivo)) {
+			cout<<"La coordenada final no existe"<<endl;
+		}
+		else if (!(Actual = findNode(inicial)) ) {
+			cout<<"La coordenada inicial no existe"<<endl;
+		} else {
 			list<Node *> cola;
 			cola.push_back(Actual);
 			Ncamino.push_back(Actual);
@@ -196,8 +204,9 @@ public:
 				   Ncamino.push_back(cola.front());
 		}
 		vector<pair<int, int>> camino;
+		cout<<endl<<"Camino por amplitud"<<endl;
 		for (auto node : Ncamino) {
-			cout << "(" << node->data.first << "," << node->data.second << ") ->";
+			cout << "(" << node->data.first << "," << node->data.second << "); ";
 			camino.push_back(make_pair(node->data.first, node->data.second));
 			node->marked = false;
 		}
@@ -221,13 +230,7 @@ Graph<pair<int, int>, int> *graph = new Graph<pair<int, int>, int>;
 vector<pair<int,int>> caminoA;
 vector<pair<int,int>> caminoBlind;
 
-bool lastOne (int i) {
-	while ( i > 100 ) 
-		i /= 10;
-	return i != 99 ? true : false;
-}
-
-bool b =false;
+bool b = false;
 
 GLvoid window_key(unsigned char key, int x, int y) {
 	switch (key) {
@@ -240,7 +243,7 @@ GLvoid window_key(unsigned char key, int x, int y) {
 		caminoBlind.clear();
 		pair<int, int> inicial;
 		pair<int, int> objetivo;
-		cout << "Ingresa las coordenadas iniciales: "; cin >> inicial.first>> inicial.second;
+		cout << endl << "Ingresa las coordenadas iniciales: "; cin >> inicial.first>> inicial.second;
 		cout << "Ingresa las coordenadas objetivos: "; cin >> objetivo.first >> objetivo.second;
 		
 		caminoA = graph->findPathA (inicial, objetivo);
@@ -248,6 +251,10 @@ GLvoid window_key(unsigned char key, int x, int y) {
 		glutPostRedisplay();
 		break;
 	}
+	case KEY_B:
+		b = !b;
+		glutPostRedisplay();
+		break;
 	default:
 		break;
 	}
@@ -276,6 +283,7 @@ void display_cb() {
 		glEnd();
 		
 		if(b) {
+			glLineWidth(1);
 			glBegin(GL_LINES);
 			for( auto edge : node->edges) {
 				auto* B = edge->nodes[ edge->nodes[0] == node ];
@@ -319,27 +327,14 @@ void initialize() {
 int main (int argc, char **argv) {
 	srand (time (NULL));
 	
-	/// creation of nodes
+	/// crear nodos
 	for ( int i = 0; i < 100; ++i )
 		for ( int j = 0; j < 100; ++j ) 
 			graph->InsertNode (make_pair (i, j), i + j);
 	
-	/// creation of edges
-	//for(int i=0;i<99;i++ )
-	//    graph->InsertEdge (i,i+1,1);
-	
-	//for ( int i = 100; i < 99 * 100 + 99; ++i ) {
-	//    graph->InsertEdge (i, i - 100, 1); // arriba
-	//    if ( lastOne (i) ) {
-	//        graph->InsertEdge (i, i - 100, 1); // diagonal arriba
-	//        graph->InsertEdge (i, i + 1, 1); // derecha
-	//        graph->InsertEdge (i, i + 199, 1); // diagonal abajo
-	//    }
-	//}
-	
+	/// crear aristas
 	/// i es eje y
 	/// j es eje x
-	
 	for ( int i = 0; i < 100; ++i ) {
 		for ( int j = 0; j < 100; ++j ) {
 			if(i<99)
@@ -356,6 +351,7 @@ int main (int argc, char **argv) {
 		}
 	}
 	
+	/// remover nodos
 	for ( int i = 0; i < 2000; ++i ) 
 		graph->RemoveNode (rand () % (10000-i));
 	
