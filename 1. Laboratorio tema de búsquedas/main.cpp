@@ -24,14 +24,14 @@
 using namespace std;
 
 template<class G>
-class Edge {
+class _Edge {
 public:
 	typedef typename G::Node Node;
 	typedef typename G::EE E;
 	E data;
 	Node *nodes[2];
 	
-	Edge (Node *A, Node *B, E x) {
+	_Edge (Node *A, Node *B, E x) {
 		nodes[0] = A;
 		nodes[1] = B;
 		data = x;
@@ -39,7 +39,7 @@ public:
 };
 
 template<class G>
-class Node {
+class _Node {
 public:
 	typedef typename G::Edge Edge;
 	typedef typename G::NN N;
@@ -49,7 +49,7 @@ public:
 	bool marked;
 	vector<Edge *> edges;
 	
-	Node (N n, int index) {
+	_Node (N n, int index) {
 		data = n;
 		this->index = index;
 	}
@@ -70,8 +70,8 @@ template<class N, class E>
 class Graph {
 public:
 	typedef Graph<N, E> self;
-	typedef Node<self> Node;
-	typedef Edge<self> Edge;
+	typedef _Node<self> Node;
+	typedef _Edge<self> Edge;
 	typedef N NN;
 	typedef E EE;
 	vector<Node *> nodes;

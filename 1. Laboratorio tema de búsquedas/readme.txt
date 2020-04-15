@@ -1,6 +1,8 @@
 Busqueda ciega(amplitud) y heuristica(A*)
 Codigo en C++ en ZinjaI usando la libreria glut para OpenGL
 -------
+Comando recomendado para linux: g++ main.cpp -o firstOpenGlApp -lglut -lGLU -lGL
+-------
 Al correrlo aparecerán los puntos del grafo dibujados(incluyendo el 20% eliminados), luego le da ENTER en la interfaz gráfica
 y  en la consola le pedirá los Nodos Iniciales que se coloca de la forma: 0 0
 Le da ENTER y luego de la misma forma coloca los nodos objetivos,
