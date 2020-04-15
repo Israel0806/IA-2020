@@ -135,12 +135,13 @@ public:
 		return sqrt (pow ((a.first - b.first), 2) + pow ((a.second - b.second), 2));
 	}
 	
+	/// busqueda A*
 	vector<pair<int,int> > findPathA (N inicial, N objetivo) {
-		/// encontrar el nodo inicial
+		vector<pair<int,int>> camino;
 		Node *Actual = nullptr, *NMin=nullptr;
 		Edge *EMin = nullptr;
-		/// elegir el mejor camino
 		double minV,total;
+		E acumulado = 0;
 		vector<Edge *> Ecamino;
 		vector<Node * > Ncamino;
 		if ((Actual = findNode(inicial)) and findNode(objetivo) ) {
@@ -152,7 +153,7 @@ public:
 				}*/
 				for ( auto edge : Actual->edges ) {
 					Node *B = edge->nodes[edge->nodes[0] == Actual];
-					total = edge->data + ff (B->data, objetivo);
+					total = acumulado /*edge->data*/ + ff (B->data, objetivo);
 					if ( total < minV ) {
 						minV = total;
 						NMin = B;
@@ -160,24 +161,26 @@ public:
 					}
 				}
 				Actual = NMin;
+				acumulado += EMin->data;
 				Ncamino.push_back (NMin);
 				Ecamino.push_back (EMin);
 			}
-		}
-		vector<pair<int,int>> camino;
-		cout<<endl<<"Camino A*"<<endl;
-		for ( auto node : Ncamino ) {
-			cout << "(" << node->data.first << "," << node->data.second << "); ";
-			camino.push_back(make_pair(node->data.first, node->data.second));
+			cout<<endl<<"Camino A*"<<endl;
+			for ( auto node : Ncamino ) {
+				cout << "(" << node->data.first << "," << node->data.second << "); ";
+				camino.push_back(make_pair(node->data.first, node->data.second));
+			}
 		}
 		
 		return camino;
 		
 	}
 	
+	/// busqueda BFS
 	vector<pair<int, int>> findPathBlind(N inicial, N objetivo) {
-		Node* Actual = nullptr;
 		
+		vector<pair<int, int>> camino;
+		Node* Actual = nullptr;
 		vector<Node* > Ncamino;
 		if( !findNode(objetivo)) {
 			cout<<"La coordenada final no existe"<<endl;
@@ -202,16 +205,14 @@ public:
 			}
 			if(!cola.empty())
 				   Ncamino.push_back(cola.front());
-		}
-		vector<pair<int, int>> camino;
-		cout<<endl<<"Camino por amplitud"<<endl;
-		for (auto node : Ncamino) {
-			cout << "(" << node->data.first << "," << node->data.second << "); ";
-			camino.push_back(make_pair(node->data.first, node->data.second));
-			node->marked = false;
+			cout<<endl<<"Camino por amplitud"<<endl;
+			for (auto node : Ncamino) {
+				cout << "(" << node->data.first << "," << node->data.second << "); ";
+				camino.push_back(make_pair(node->data.first, node->data.second));
+				node->marked = false;
+			}
 		}
 		return camino;
-		
 	}
 	
 	void PrintGraph () {
