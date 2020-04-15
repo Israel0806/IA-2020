@@ -1,3 +1,4 @@
+Busqueda ciega(amplitud) y heuristica(A*)
 Codigo en C++ en ZinjaI usando la libreria glut para OpenGL
 -------
 Al correrlo aparecerán los puntos del grafo dibujados(incluyendo el 20% eliminados), luego le da ENTER en la interfaz gráfica
