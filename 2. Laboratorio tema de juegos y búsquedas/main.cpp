@@ -17,12 +17,14 @@
 # define KEY_ESC 27
 # define KEY_PLUS 43
 # define KEY_MINUS 45
-# define ENTER 13
+# define KEY_ENTER 13
 # define KEY_B 98
+# define KEY_R 114
 
 # define PI 3.14159265358979323846  
 #define font18 GLUT_BITMAP_HELVETICA_18
 #define font12 GLUT_BITMAP_9_BY_15
+#define font24 GLUT_BITMAP_TIMES_ROMAN_24
 #define Radius 5
 
 # define colorRed glColor3f(1,0,0)
@@ -44,14 +46,20 @@ struct strJuego {
 	void computeUtility () {
 		int Xs = 0, Os = 0;
 		for ( int i = 0; i < 3; ++i ) {
-			bool horX = true, horO = true;
-			bool verX = true, verO = true;
+			bool horX, horO;
+			bool verX, verO;
+			horX = true, horO = true;
+			verX = true, verO = true;
 			for ( int j = 0; j < 3; ++j ) {
-				if ( lista[i][j] == 1 ) horX = false; /// horizontal para X
-				if ( lista[i][j] == 0 ) horO = false; /// horizontal para O
+				if ( lista[i][j] == 1 ) 
+					horX = false; /// horizontal para X
+				if ( lista[i][j] == 0 ) 
+					horO = false; /// horizontal para O
 				
-				if ( lista[j][i] == 1 ) verX = false; /// vertical para X
-				if ( lista[j][i] == 0 ) verO = false; /// vertical para O
+				if ( lista[j][i] == 1 ) 
+					verX = false; /// vertical para X
+				if ( lista[j][i] == 0 ) 
+					verO = false; /// vertical para O
 			}
 			if ( horX ) ++Xs; if ( horO ) ++Os;
 			if ( verX ) ++Xs; if ( verO ) ++Os;
@@ -63,15 +71,35 @@ struct strJuego {
 			if ( lista[i][i] == 1 ) digX = false; /// diagonal(\) para X
 			if ( lista[i][i] == 0 ) digO = false; /// diagonal(\) para O
 			
-			if ( lista[2 - i][2 - i] == 1 ) _digX = false; /// diagonal(/) para X
-			if ( lista[2 - i][2 - i] == 0 ) _digO = false; /// diagonal(/) para O
-			if ( digX ) ++Xs;  if ( digO ) ++Os;
-			if ( _digX ) ++Xs; if ( _digO ) ++Os;
+			if ( lista[i][2 - i] == 1 ) _digX = false; /// diagonal(/) para X
+			if ( lista[i][2 - i] == 0 ) _digO = false; /// diagonal(/) para O
 		}
-		utilidad = Xs - Os;
+		if ( digX ) ++Xs;  if ( digO ) ++Os;
+		if ( _digX ) ++Xs; if ( _digO ) ++Os;
+		utilidad = - Xs + Os;
 	}
 	
-	void copy (strJuego newTablero) {
+	void print() {
+		cout<<"Utilidad: "<<utilidad<<endl;
+		for ( int i = 0; i < 3; ++i ) {
+			for ( int j = 0; j < 3; ++j ) {
+				cout << lista[i][j] << " ";
+			}
+			cout<<endl;
+		}
+		cout<<endl;
+	}
+	
+	void reset() {
+		for ( int i = 0; i < 3; ++i ) {
+			for ( int j = 0; j < 3; ++j ) {
+				lista[i][j] = -1;
+			}
+		}
+		jugadasRestantes = 9;
+	}
+	
+	void copy (strJuego &newTablero) {
 		for ( int i = 0; i < 3; ++i ) {
 			for ( int j = 0; j < 3; ++j ) {
 				lista[i][j] = newTablero.lista[i][j];
@@ -127,43 +155,41 @@ public:
 	void createTree (Node *actual, int height, int maxHeight) {
 		if ( !maxHeight ) return;
 		for ( int i = 0; i < 9; ++i ) {
+//			cout<<height<<" ";
 			Node *node = new Node (INT_MIN, INT_MAX, height, actual);
 			actual->nodes.push_back (node);
 			createTree (actual->nodes.back (), height + 1, maxHeight - 1);
 		}
+//		cout<<endl;
 	}
 	
-	void generarArbol (strJuego tablero) {
+	void generarArbol (strJuego &tablero) {
 		root->estadoActual.copy (tablero);
 		generarArbol (root, 0);
 	}
 	
 	/// al inicio de cada generacion de arbol
 	void generarArbol (Node *actual, int jugador) {
-		for ( int i = 0; i < actual->estadoActual.jugadasRestantes; ++i ) {
-			agregarJugada (actual->nodes[i], !jugador); /// segundo nivel
-			
-			if ( actual->height == maxHeight )
-				actual->estadoActual.computeUtility (); /// si es hoja calculas utilidad
-			else
+		if ( actual->height == maxHeight or actual->estadoActual.jugadasRestantes == 0 )
+			actual->estadoActual.computeUtility (); /// si es hoja calculas utilidad
+		else {
+			agregarJugada (actual, jugador); /// segundo nivel
+			for ( int i = 0; i < actual->estadoActual.jugadasRestantes; ++i ) 
 				generarArbol (actual->nodes[i], !jugador); /// si no es hoja generas el arbol hijo
 			
-			/// si el nodo es no hoja entonces veo su max o min segun la altura
-			if ( !actual->nodes.empty () )
-				if ( actual->height % 2 )
-					maximo (actual);
-			
-				else
-					minimo (actual);
+			if ( actual->height % 2 )
+				maximo (actual);
+			else
+				minimo (actual);
 		}
 	}
-	
+
 	void agregarJugada (Node *actual, int jugador) {
-		actual->estadoActual = actual->back->estadoActual; /// para evitar estados del arbol anterior
-		int pos = 0; // pos en la lista de nodes, no siempre sera 9
+		int pos = 0;
 		for ( int i = 0; i < 3; ++i ) {
 			for ( int j = 0; j < 3; ++j ) {
 				if ( actual->estadoActual.lista[i][j] == -1 ) {
+					actual->nodes[pos]->estadoActual.copy(actual->estadoActual);
 					actual->nodes[pos]->estadoActual.lista[i][j] = jugador;
 					actual->nodes[pos++]->estadoActual.jugadasRestantes--;
 				}
@@ -198,7 +224,7 @@ public:
 	}
 	
 	/// generar arbol
-	void checkArbol (strJuego tablero) {
+	void checkArbol (strJuego &tablero) {
 		/// hacer la jugada 
 		generarArbol (tablero);
 		
@@ -216,50 +242,65 @@ public:
 };
 
 
-Tree *tree = new Tree (selectedHeight);
+Tree *tree = nullptr;
 strJuego tablero;
 /// turno es quien comenzo
-int turno = 0, ganador = -1;
-int x1 = 266, x2 = 532;
-int y1 = 186, y2 = 372;
+/// ganador es quien gano el juego
+/// -1 se grafica el juego, 0 gano la computadora y 1 gano el jugador
+int turnoInicial, turno = 0, ganador = -1;
+
+/// funcion sacada de internet para dibujar un circulo a partir de una linea con muchos vertices
+void drawHollowCircle (GLfloat x, GLfloat y, GLfloat radius) {
+	int i;
+	int lineAmount = 100; //# of triangles used to draw circle
+	//GLfloat radius = 0.8f; //radius
+	GLfloat twicePi = 2.0f * PI;
+	glBegin (GL_LINE_LOOP);
+	for ( i = 0; i <= lineAmount; i++ ) {
+		glVertex2f (
+					x + (radius * cos (i * twicePi / lineAmount)),
+					y + (radius * sin (i * twicePi / lineAmount))
+					);
+	}
+	glEnd ();
+}
 
 void iniciarJuego () {
 	string a;
-	cout << "Deseas empezar tu o no(si/no)" << char (63) << endl;
-	cin.ignore ();
-	getline (cin, a);
+	while(true) {
+		int op;
+		cout << "Selecciona la dificultad:" << endl;
+		cout << "1. Facil" << endl;
+		cout << "2. Medio" << endl;
+		cout << "3. Dificil" << endl;
+		cin>>op;
+		if(op == 1) {
+			selectedHeight = 2;
+			break;
+		} else if(op == 2) {
+			selectedHeight = 4;
+			break;
+		} else if(op == 3){
+			selectedHeight = 6;
+			break;
+		} else {
+			cout << "opcion incorrecta"<<endl;
+		}
+	}
+	tree = new Tree (selectedHeight);
+	cout << "Deseas iniciar tu(si/no)" << char (63) << endl;
+	cin>>a;
+	turno = 1;
 	if ( a == "no" or a == "NO" ) {
-		turno = 0;
+		turnoInicial = 0;
+		tree->checkArbol(tablero);
 	} else {
-		turno = 1;
-		///tree->checkArbol(tablero);
-	}
-	/// falta
-}
-
-
-GLvoid window_key (unsigned char key, int x, int y) {
-	switch ( key ) {
-	case KEY_ESC:
-		exit (0);
-		break;
-	default:
-		break;
+		turnoInicial = 1;
 	}
 }
 
-void reshape_cb (int w, int h) {
-	if ( w == 0 || h == 0 ) return;
-	glViewport (0, 0, w, h);
-	glMatrixMode (GL_PROJECTION);
-	glLoadIdentity ();
-	glutKeyboardFunc (&window_key);
-	gluOrtho2D (0, w, 0, h);
-	glMatrixMode (GL_MODELVIEW);
-	glLoadIdentity ();
-}
-
-bool pintarCasilla (int x, int y) {
+/// segun la posicion del mouse cambia el tablero segun el jugador actual
+bool marcarCasilla (int x, int y) {
 	if ( x <= 266 ) {
 		if ( y <= 186 ) { /// pos 2,0
 			if ( tablero.lista[2][0] == -1 ) {
@@ -315,65 +356,41 @@ bool pintarCasilla (int x, int y) {
 	return false;
 }
 
-
+/// verifica si alguien gano el juego
 void verificarJuego () {
-	bool horX = true, horO = true;
-	bool verX = true, verO = true;
+	bool horX, horO;
+	bool verX, verO;
 	bool digX = true, digO = true;
 	bool _digX = true, _digO = true;
 	for ( int i = 0; i < 3; ++i ) {
+		horX = true, horO = true;
+		verX = true, verO = true;
 		for ( int j = 0; j < 3; ++j ) {
-			if ( tablero.lista[i][j] == 1 ) horX = false; /// horizontal para X
-			if ( tablero.lista[i][j] == 0 ) horO = false; /// horizontal para O
+			if ( tablero.lista[i][j] != 0 ) horX = false; /// horizontal para X
+			if ( tablero.lista[i][j] != 1 ) horO = false; /// horizontal para O
 			
-			if ( tablero.lista[j][i] == 1 ) verX = false; /// vertical para X
-			if ( tablero.lista[j][i] == 0 ) verO = false; /// vertical para O
+			if ( tablero.lista[j][i] != 0 ) verX = false; /// vertical para X
+			if ( tablero.lista[j][i] != 1 ) verO = false; /// vertical para O
 		}
+		if(horX or verX) {ganador = 0; return ;}
+		if(horO or verO) {ganador = 1; return ;}
 	}
 	/// diagonal
 	for ( int i = 0; i < 3; ++i ) {
-		if ( tablero.lista[i][i] == 1 ) digX = false; /// diagonal(\) para X
-		if ( tablero.lista[i][i] == 0 ) digO = false; /// diagonal(\) para O
+		if ( tablero.lista[i][i] != 0 ) digX = false; /// diagonal(\) para X
+		if ( tablero.lista[i][i] != 1 ) digO = false; /// diagonal(\) para O
 		
-		if ( tablero.lista[2 - i][2 - i] == 1 ) _digX = false; /// diagonal(/) para X
-		if ( tablero.lista[2 - i][2 - i] == 0 ) _digO = false; /// diagonal(/) para O
+		if ( tablero.lista[i][2 - i] != 0 ) _digX = false; /// diagonal(/) para X
+		if ( tablero.lista[i][2 - i] != 1 ) _digO = false; /// diagonal(/) para O
 	}
-	if ( horX or verX or digX or _digX ) ganador = 0;
-	if ( horO or verO or digO or _digO ) ganador = 1;
+	if (digX or _digX) {ganador = 0; return ;}
+	if (digO or _digO) {ganador = 1; return ;}
 }
 
-GLvoid OnMouseClick (int button, int state, int x, int y) {
-	y = 600 - y;
-	if ( button == GLUT_LEFT_BUTTON && state == GLUT_DOWN ) {
-		
-		/// pintar casilla correcta del usuario
-		if ( pintarCasilla (x, y) )
-			turno = !turno;
-		//		verificarJuego (); /// verificar si termina o no el juego
-		/// pintar casilla de la IA
-		//		tree->checkArbol (tablero); /// generar arbol y/o pinte casilla
-	}
-	glutPostRedisplay ();
-}
-
-void drawHollowCircle (GLfloat x, GLfloat y, GLfloat radius) {
-	int i;
-	int lineAmount = 100; //# of triangles used to draw circle
-	//GLfloat radius = 0.8f; //radius
-	GLfloat twicePi = 2.0f * PI;
-	glColor3f (0, 0, 0);
-	glBegin (GL_LINE_LOOP);
-	for ( i = 0; i <= lineAmount; i++ ) {
-		glVertex2f (
-					x + (radius * cos (i * twicePi / lineAmount)),
-					y + (radius * sin (i * twicePi / lineAmount))
-					);
-	}
-	glEnd ();
-}
-
+/// dibujar Xs en la posicion indicada
 void dibujarX (int pos) {
 	glLineWidth (5);
+	colorPurple;
 	switch ( pos ) {
 	case 0:
 		glBegin (GL_LINES);
@@ -450,8 +467,10 @@ void dibujarX (int pos) {
 	}
 }
 
+/// dibujar Os en la posicion indicada
 void dibujarO (int pos) {
 	glLineWidth (5);
+	colorBlue;
 	switch ( pos ) {
 	case 0:
 		drawHollowCircle (143, 466, 70);
@@ -483,11 +502,60 @@ void dibujarO (int pos) {
 	}
 }
 
+void restartGame () {
+	tablero.reset();
+	ganador = -1;
+	turno = 1;
+	if(!turnoInicial)
+		tree->checkArbol (tablero);
+}
+
+GLvoid window_key (unsigned char key, int x, int y) {
+	switch ( key ) {
+	case KEY_ESC:
+		exit (0);
+		break;
+	case KEY_R: /// Restart
+		restartGame();
+		break;
+	default:
+		break;
+	}
+	glutPostRedisplay();
+}
+
+void reshape_cb (int w, int h) {
+	if ( w == 0 || h == 0 ) return;
+	glViewport (0, 0, w, h);
+	glMatrixMode (GL_PROJECTION);
+	glLoadIdentity ();
+	glutKeyboardFunc (&window_key);
+	gluOrtho2D (0, w, 0, h);
+	glMatrixMode (GL_MODELVIEW);
+	glLoadIdentity ();
+}
+
+GLvoid OnMouseClick (int button, int state, int x, int y) {
+	y = 600 - y;
+	if ( button == GLUT_LEFT_BUTTON && state == GLUT_DOWN ) {		
+		/// pintar casilla correcta del usuario
+		if ( marcarCasilla (x, y) ) {
+			tablero.computeUtility();
+			tablero.jugadasRestantes--;
+			
+			verificarJuego (); /// verificar si termina o no el juego
+			/// pintar casilla de la IA
+			tree->checkArbol (tablero); /// generar arbol y/o pinte casilla
+			verificarJuego (); /// verificar si termina o no el juego
+		}
+	}
+	glutPostRedisplay ();
+}
+
 void dibujarTablero () {
 	colorRed;
 	char jugador1[14] = { 'T','u','r','n','o',':',' ','J','u','g','a','d','o','r' };
 	char jugador2[18] = { 'T','u','r','n','o',':',' ','C','o','m','p','u','t','a','d','o','r','a' };
-	
 	
 	glRasterPos2i (330, 580); /// pos donde ira el texto
 	if ( turno ) {
@@ -522,18 +590,34 @@ void dibujarTablero () {
 	}
 }
 
+/// dibujar la pantalla indicando quien gano
+void pantallaGanador(int ganador) {
+	glClear(GL_COLOR_BUFFER_BIT);
+	char jugador1[16] = { 'G','a','n','a','d','o','r',':',' ','J','u','g','a','d','o','r' };
+	char jugador2[20] = { 'G','a','n','a','d','o','r',':',' ','C','o','m','p','u','t','a','d','o','r','a' };
+	/// jugador
+	if (ganador) { 
+		colorGreen;
+		glRasterPos2i (330, 300); /// pos donde ira el texto
+			for ( int i = 0; i < 16; ++i )
+			glutBitmapCharacter (font24, jugador1[i]); /// para dibujar texto
+	} else { /// computadora
+		colorRed;
+		glRasterPos2i (310, 300); /// pos donde ira el texto
+		for ( int i = 0; i < 20; ++i )
+			glutBitmapCharacter (font24, jugador2[i]);
+	}
+}
+
 void display_cb () {
 	glClear (GL_COLOR_BUFFER_BIT);
 	glColor3f (1, 1, 0); glLineWidth (3);
 	
 	/// seguir el juego
-	if ( ganador == -1 ) {
+	if ( ganador == -1 ) 
 		dibujarTablero ();
-	} else if ( ganador ) {/// gano el jugador 
-		
-	} else { /// gano la computadora
-		
-	}
+	else /// gano el jugador 
+		pantallaGanador (ganador);
 	
 	glutSwapBuffers ();
 }
@@ -551,7 +635,7 @@ void initialize () {
 
 int main (int argc, char **argv) {
 	iniciarJuego ();
-	
+	cout<<sizeof(Node)<<endl;
 	glutInit (&argc, argv);
 	initialize ();
 	glutMainLoop ();
