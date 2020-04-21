@@ -357,7 +357,7 @@ bool marcarCasilla (int x, int y) {
 }
 
 /// verifica si alguien gano el juego
-void verificarJuego () {
+bool verificarJuego () {
 	bool horX, horO;
 	bool verX, verO;
 	bool digX = true, digO = true;
@@ -372,8 +372,8 @@ void verificarJuego () {
 			if ( tablero.lista[j][i] != 0 ) verX = false; /// vertical para X
 			if ( tablero.lista[j][i] != 1 ) verO = false; /// vertical para O
 		}
-		if(horX or verX) {ganador = 0; return ;}
-		if(horO or verO) {ganador = 1; return ;}
+		if(horX or verX) {ganador = 0; return true;}
+		if(horO or verO) {ganador = 1; return true;}
 	}
 	/// diagonal
 	for ( int i = 0; i < 3; ++i ) {
@@ -383,8 +383,8 @@ void verificarJuego () {
 		if ( tablero.lista[i][2 - i] != 0 ) _digX = false; /// diagonal(/) para X
 		if ( tablero.lista[i][2 - i] != 1 ) _digO = false; /// diagonal(/) para O
 	}
-	if (digX or _digX) {ganador = 0; return ;}
-	if (digO or _digO) {ganador = 1; return ;}
+	if (digX or _digX) {ganador = 0; return true;}
+	if (digO or _digO) {ganador = 1; return true;}
 }
 
 /// dibujar Xs en la posicion indicada
@@ -542,11 +542,16 @@ GLvoid OnMouseClick (int button, int state, int x, int y) {
 		if ( marcarCasilla (x, y) ) {
 			tablero.computeUtility();
 			tablero.jugadasRestantes--;
-			
-			verificarJuego (); /// verificar si termina o no el juego
-			/// pintar casilla de la IA
-			tree->checkArbol (tablero); /// generar arbol y/o pinte casilla
-			verificarJuego (); /// verificar si termina o no el juego
+
+			cout<<endl;
+			tablero.print();
+			if( !verificarJuego () ) { /// verificar si termina o no el juego
+				/// pintar casilla de la IA
+				tree->checkArbol (tablero); /// generar arbol y/o pinte casilla
+				cout<<endl;
+				verificarJuego (); /// verificar si termina o no el juego
+				tablero.print();
+			}
 		}
 	}
 	glutPostRedisplay ();
@@ -635,7 +640,6 @@ void initialize () {
 
 int main (int argc, char **argv) {
 	iniciarJuego ();
-	cout<<sizeof(Node)<<endl;
 	glutInit (&argc, argv);
 	initialize ();
 	glutMainLoop ();
