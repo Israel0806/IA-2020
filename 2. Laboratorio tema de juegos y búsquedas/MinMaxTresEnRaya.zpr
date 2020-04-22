@@ -18,7 +18,7 @@ current_source=main.cpp
 path_char=\
 [source]
 path=main.cpp
-cursor=598:35
+cursor=183:7
 open=true
 [config]
 name=Debug_Linux
@@ -212,12 +212,5 @@ libs_to_use=
 strip_executable=0
 console_program=1
 dont_generate_exe=0
-[inspections]
-expr=siguiente_jugada
-expr=tree->root
-expr=tree->root->nodes[0]
-expr=actual->nodes
-expr=actual->nodes[0]
-expr=this
 [custom_tools]
 [end]

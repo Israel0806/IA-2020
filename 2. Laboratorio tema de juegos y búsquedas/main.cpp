@@ -33,6 +33,7 @@
 # define colorGreen glColor3f(0,0.502,0)
 # define colorBlue glColor3f(0,0,0.804)
 # define colorBlack glColor3f(0,0,0)
+# define colorWhite glColor3f(1,1,1)
 
 using namespace std;
 int selectedHeight = 2;
@@ -150,11 +151,12 @@ public:
 		root = new Node (INT_MIN, INT_MAX, 0, nullptr);
 		createTree (root, 1, maxHeight);
 	}
-	
-	/// creo todos los nodos con 9 posibilidades aunque no se usen todas
+	/// maxHeight: 4 3 2 1 0
+	/// height:    1 2 3 4
+	/// creo todos los nodos con (10 - height) posibilidades aunque no se usen todas
 	void createTree (Node *actual, int height, int maxHeight) {
 		if ( !maxHeight ) return;
-		for ( int i = 0; i < 9; ++i ) {
+		for ( int i = 0; i < 10 - height; ++i ) {
 //			cout<<height<<" ";
 			Node *node = new Node (INT_MIN, INT_MAX, height, actual);
 			actual->nodes.push_back (node);
@@ -184,6 +186,7 @@ public:
 		}
 	}
 
+	/// agregar la jugada en los nodos hijos de actual
 	void agregarJugada (Node *actual, int jugador) {
 		int pos = 0;
 		for ( int i = 0; i < 3; ++i ) {
@@ -275,13 +278,13 @@ void iniciarJuego () {
 		cout << "3. Dificil" << endl;
 		cin>>op;
 		if(op == 1) {
-			selectedHeight = 2;
-			break;
-		} else if(op == 2) {
 			selectedHeight = 4;
 			break;
-		} else if(op == 3){
+		} else if(op == 2) {
 			selectedHeight = 6;
+			break;
+		} else if(op == 3){
+			selectedHeight = 8;
 			break;
 		} else {
 			cout << "opcion incorrecta"<<endl;
@@ -358,6 +361,8 @@ bool marcarCasilla (int x, int y) {
 
 /// verifica si alguien gano el juego
 bool verificarJuego () {
+	if( !tablero.jugadasRestantes )
+		ganador = 2;
 	bool horX, horO;
 	bool verX, verO;
 	bool digX = true, digO = true;
@@ -537,20 +542,19 @@ void reshape_cb (int w, int h) {
 
 GLvoid OnMouseClick (int button, int state, int x, int y) {
 	y = 600 - y;
-	if ( button == GLUT_LEFT_BUTTON && state == GLUT_DOWN ) {		
-		/// pintar casilla correcta del usuario
-		if ( marcarCasilla (x, y) ) {
-			tablero.computeUtility();
-			tablero.jugadasRestantes--;
-
-			cout<<endl;
-			tablero.print();
-			if( !verificarJuego () ) { /// verificar si termina o no el juego
-				/// pintar casilla de la IA
-				tree->checkArbol (tablero); /// generar arbol y/o pinte casilla
-				cout<<endl;
-				verificarJuego (); /// verificar si termina o no el juego
-				tablero.print();
+	if ( (button == GLUT_LEFT_BUTTON or button == GLUT_RIGHT_BUTTON) && state == GLUT_DOWN ) {		
+		if (ganador != -1) {
+			if( x > 300 and x < 550 and y > 270 and y < 370) 
+				restartGame();
+		} else {
+			/// pintar casilla correcta del usuario
+			if ( marcarCasilla (x, y) ) {
+				tablero.jugadasRestantes--;
+				if( !verificarJuego () and tablero.jugadasRestantes ) { /// verificar si termina o no el juego
+					/// pintar casilla de la IA
+					tree->checkArbol (tablero); /// generar arbol y/o pinte casilla
+					verificarJuego (); /// verificar si termina o no el juego
+				}
 			}
 		}
 	}
@@ -600,18 +604,39 @@ void pantallaGanador(int ganador) {
 	glClear(GL_COLOR_BUFFER_BIT);
 	char jugador1[16] = { 'G','a','n','a','d','o','r',':',' ','J','u','g','a','d','o','r' };
 	char jugador2[20] = { 'G','a','n','a','d','o','r',':',' ','C','o','m','p','u','t','a','d','o','r','a' };
+	char empate[6] = { 'E','m','p','a','t','e'};
+	char *jugar = "Play Again";
 	/// jugador
-	if (ganador) { 
+	if (ganador == 1) { 
 		colorGreen;
-		glRasterPos2i (330, 300); /// pos donde ira el texto
+		glRasterPos2i (330, 400); /// pos donde ira el texto
 			for ( int i = 0; i < 16; ++i )
 			glutBitmapCharacter (font24, jugador1[i]); /// para dibujar texto
-	} else { /// computadora
+	} else if(ganador == 0){ /// computadora
 		colorRed;
-		glRasterPos2i (310, 300); /// pos donde ira el texto
+		glRasterPos2i (310, 400); /// pos donde ira el texto
 		for ( int i = 0; i < 20; ++i )
 			glutBitmapCharacter (font24, jugador2[i]);
-	}
+	} else {
+		colorRed;
+		glRasterPos2i (380, 400); /// pos donde ira el texto
+		for ( int i = 0; i < 6; ++i )
+			glutBitmapCharacter (font24, empate[i]);
+	}	
+	
+	colorGreen;
+		glBegin(GL_POLYGON);
+		glVertex2i(300,370); /// top left
+		glVertex2i(550,370); /// top right
+		glVertex2i(550,270); /// bottom right
+		glVertex2i(300,270); /// bottom left
+	glEnd();
+	
+	colorWhite;
+	glRasterPos2i (370, 310); /// pos donde ira el texto
+	for ( int i = 0; i < 10; ++i )
+		glutBitmapCharacter (font24, jugar[i]);
+	
 }
 
 void display_cb () {
