@@ -153,11 +153,13 @@ public:
 				}*/
 				for ( auto edge : Actual->edges ) {
 					Node *B = edge->nodes[edge->nodes[0] == Actual];
-					total = acumulado /*edge->data*/ + ff (B->data, objetivo);
-					if ( total < minV ) {
-						minV = total;
-						NMin = B;
-						EMin = edge;
+					if(find(Ncamino.begin(),Ncamino.end(),B)==Ncamino.end() ){
+						total = acumulado /*edge->data*/ + ff (B->data, objetivo);
+						if ( total < minV ) {
+							minV = total;
+							NMin = B;
+							EMin = edge;
+						}
 					}
 				}
 				Actual = NMin;
@@ -166,6 +168,21 @@ public:
 				Ecamino.push_back (EMin);
 			}
 			cout<<endl<<"Camino A*"<<endl;
+			
+			for ( int i=Ncamino.size()-1;i;i--){
+				for ( auto edge : (Ncamino[i])->edges ) {
+					Node *B = edge->nodes[edge->nodes[0] == Ncamino[i]];
+					int j=0;
+					while(Ncamino[j]!=B && j<i){
+						++j;
+					}
+					++j;
+					while(i>j){
+						Ncamino.erase(Ncamino.begin()+j);
+						--i;
+					}
+				}
+			}
 			for ( auto node : Ncamino ) {
 				cout << "(" << node->data.first << "," << node->data.second << "); ";
 				camino.push_back(make_pair(node->data.first, node->data.second));
@@ -184,6 +201,9 @@ public:
 		vector<Node* > Ncamino;
 		if( !findNode(objetivo)) {
 			cout<<"La coordenada final no existe"<<endl;
+			if (!(Actual = findNode(inicial)) ) {
+				cout<<"La coordenada inicial no existe"<<endl;
+			}
 		}
 		else if (!(Actual = findNode(inicial)) ) {
 			cout<<"La coordenada inicial no existe"<<endl;
@@ -356,7 +376,8 @@ int main (int argc, char **argv) {
 	for ( int i = 0; i < 2000; ++i ) 
 		graph->RemoveNode (rand () % (10000-i));
 	
-	
+	//for ( int i = 0; i < 15; ++i ) 
+	//	graph->RemoveNode (205);
 	
 	glutInit (&argc, argv);
 	initialize();
