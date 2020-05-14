@@ -390,6 +390,7 @@ bool verificarJuego () {
 	}
 	if (digX or _digX) {ganador = 0; return true;}
 	if (digO or _digO) {ganador = 1; return true;}
+	return false;
 }
 
 /// dibujar Xs en la posicion indicada
