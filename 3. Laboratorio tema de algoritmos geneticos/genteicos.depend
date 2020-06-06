@@ -1,0 +1,10 @@
+# depslib dependency file v1.0
+1591322935 source:d:\ucsp 2020\ia\genteicos\main.cpp
+	<iostream>
+	<bits/stdc++.h>
+	<ctime>
+	<math.h>
+	<algorithm>
+	<vector>
+	<cstdio>
+
