@@ -16,15 +16,18 @@
 #include <string>
 
 using namespace std;
-bool matriz[20][20]={};
+bool matriz[20][20]={};//matriz ligada a la interfaz interactiva
+//tamaño de la matriz
 int filas;
 int columnas;
 
 struct perceptron{
-	int validos[10];
-	vector<double> pesos[10];
+	int validos[10];//cantidad de patrones analizados para cada número
+	vector<double> pesos[10];//matriz de pesos, un vector para cada una de las 10 neuronas
 	double bias;
 	void extraerDatos(int i, vector<vector<bool> > &matricesEntrenamiento, vector<int> &correspondiente){
+		//busca todos los archivos de la forma [0-9].txt y los carga en los parametros por referencia
+		//es llamado por la funcion void entrenar
 		validos[i]=0;
 		ifstream ifs;
 		ifs.open ( to_string(i)+".txt", std::ifstream::in);
@@ -55,36 +58,32 @@ struct perceptron{
 		ifs.close();
 	}
 	void entrenar(double tasaAprendizaje){
+		//reinicia todos los pesos y el bias
 		bias=0.0;
 		for(int i=0;i<10;++i){
 			pesos[i].resize(filas*columnas,0.0);
 		}
 		
+		//extrae los patrones de los archivos txt
 		vector<vector<bool> > matricesEntrenamiento;
 		vector<int> correspondiente;
 		for(int i=0;i<10;++i){
 			extraerDatos(i,matricesEntrenamiento,correspondiente);
 		}
+		
+		//entrenamiento para cada uno de las 10 neuronas, solo si tiene patrones validos
 		for(int i=0;i<10;++i){
-			//cout<<endl<<i<<endl;
 			if(validos[i]>0){
 				bool algunoNoCoincide=true;
-				//cout<<endl<<validos[i]<<endl;
+				
 				while(algunoNoCoincide){
-					//cout<<endl<<1<<endl;
-					//cout<<endl<<'a'<<endl;
 					algunoNoCoincide=false;
 					for(auto it=0;it<matricesEntrenamiento.size();it++){
-						//cout<<endl<<'a'<<endl;
-						//cout<<endl<<matricesEntrenamiento[it].size()<<endl;
-						//cout<<endl<<2<<endl;
 						double resultado=bias;
-						//cout<<endl<<pesos[i].size()<<endl;
 						for(int j=0;j<matricesEntrenamiento[it].size();++j){
 							resultado+=matricesEntrenamiento[it][j]*pesos[i][j];
 							
 						}
-						//cout<<endl<<'b'<<endl;
 						bool y=(resultado>0);
 						if(y!=(i==correspondiente[it]) ){
 							algunoNoCoincide=true;
