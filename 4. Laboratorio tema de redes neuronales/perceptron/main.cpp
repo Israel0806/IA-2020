@@ -94,7 +94,7 @@ struct perceptron{
 							
 							bias+=diferencia;
 							for(int j=0;j<matricesEntrenamiento[it].size();++j){
-								pesos[i][j]+=diferencia*matricesEntrenamiento[it][j];
+								pesos[i][j]+=diferencia*tasaAprendizaje*matricesEntrenamiento[it][j];
 							}
 						}
 					}	
